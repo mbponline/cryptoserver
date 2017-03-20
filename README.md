@@ -2,7 +2,7 @@
 
 The Kvpbase cryptoserver is a RESTful API platform for encryption and decryption using generated one-time use keys generated using a private passphrase, salt, and initialization vector.
 
-![alt tag](https://github.com/maraudersoftware/CryptoServer/blob/master/assets/diagram.png)
+![alt tag](https://github.com/kvpbase/cryptoserver/blob/master/assets/diagram.png)
 
 ## Setup
 Run the app with ```setup``` in the command line arguments to run the setup script.
