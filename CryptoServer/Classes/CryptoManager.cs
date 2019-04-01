@@ -7,8 +7,11 @@ using System.Text;
 using System.Threading.Tasks;
 using SyslogLogging;
 
-namespace Kvpbase
+namespace Kvpbase.Classes
 {
+    /// <summary>
+    /// Crypto manager responsible for encryption and decryption operations.
+    /// </summary>
     public class CryptoManager
     {
         #region Public-Members
@@ -17,26 +20,38 @@ namespace Kvpbase
 
         #region Private-Members
 
-        private Settings SystemConfig;
-        private LoggingModule Logging;
+        private Settings _Settings;
+        private LoggingModule _Logging;
 
         #endregion
 
         #region Constructors-and-Factories
 
+        /// <summary>
+        /// Instantiate the object.
+        /// </summary>
+        /// <param name="settings">Server settings.</param>
+        /// <param name="logging">Logging instance.</param>
         public CryptoManager(Settings settings, LoggingModule logging)
         {
             if (settings == null) throw new ArgumentNullException(nameof(settings));
             if (logging == null) throw new ArgumentNullException(nameof(logging));
 
-            SystemConfig = settings;
-            Logging = logging;
+            _Settings = settings;
+            _Logging = logging;
         }
 
         #endregion
 
         #region Public-Methods
 
+        /// <summary>
+        /// Encrypt data.
+        /// </summary>
+        /// <param name="data">Data to encrypt.</param>
+        /// <param name="ret">Encrypted object and metadata.</param>
+        /// <param name="failureReason">Failure reason, if any.</param>
+        /// <returns>True if successful.</returns>
         public bool Encrypt(byte[] data, out Obj ret, out string failureReason)
         {
             ret = new Obj();
@@ -50,7 +65,7 @@ namespace Kvpbase
              
             if (!CreateSessionKey(out sessionKey, out ksn))
             {
-                Logging.Log(LoggingModule.Severity.Warn, "Encrypt unable to generate session key and ksn");
+                _Logging.Log(LoggingModule.Severity.Warn, "Encrypt unable to generate session key and ksn");
                 failureReason = "Unable to generate session key and KSN.";
                 return false;
             }
@@ -66,7 +81,7 @@ namespace Kvpbase
              
             if (ret.Cipher == null || ret.Cipher.Length < 1)
             {
-                Logging.Log(LoggingModule.Severity.Warn, "Encrypt null value for cipher after encryption");
+                _Logging.Log(LoggingModule.Severity.Warn, "Encrypt null value for cipher after encryption");
                 failureReason = "Null value for cipher after encryption.";
                 return false;
             }
@@ -77,18 +92,25 @@ namespace Kvpbase
             ret.InitVector = null;
             ret.SessionKey= null;
 
-            Logging.Log(LoggingModule.Severity.Debug, "Encrypt encrypted " + data.Length + " clear bytes to " + ret.Cipher.Length + " cipher bytes");
+            _Logging.Log(LoggingModule.Severity.Debug, "Encrypt encrypted " + data.Length + " clear bytes to " + ret.Cipher.Length + " cipher bytes");
             return true; 
         }
 
+        /// <summary>
+        /// Decrypt data.
+        /// </summary>
+        /// <param name="req">Encrypted object and metadata.</param>
+        /// <param name="ret">Cleartext data.</param>
+        /// <param name="failureReason">Failure reason, if any.</param>
+        /// <returns>True if successful.</returns>
         public bool Decrypt(Obj req, out byte[] ret, out string failureReason)
         {
             failureReason = "";
             ret = null;
               
-            req.Passphrase = SystemConfig.Crypto.Passphrase;
-            req.InitVector = SystemConfig.Crypto.InitVector;
-            req.Salt = SystemConfig.Crypto.Salt;
+            req.Passphrase = _Settings.Crypto.Passphrase;
+            req.InitVector = _Settings.Crypto.InitVector;
+            req.Salt = _Settings.Crypto.Salt;
 
             req.StartTime = DateTime.Now;
              
@@ -96,7 +118,7 @@ namespace Kvpbase
 
             if (!GetSessionKey(req.Ksn, out sessionKey))
             {
-                Logging.Log(LoggingModule.Severity.Warn, "Decrypt unable to derive session key");
+                _Logging.Log(LoggingModule.Severity.Warn, "Decrypt unable to derive session key");
                 failureReason = "Unable to derive session key.";
                 return false;
             }
@@ -111,12 +133,12 @@ namespace Kvpbase
              
             if (req.Clear == null || req.Clear.Length < 1)
             {
-                Logging.Log(LoggingModule.Severity.Warn, "Decrypt null value for clear after decryption");
+                _Logging.Log(LoggingModule.Severity.Warn, "Decrypt null value for clear after decryption");
                 failureReason = "Null value for cleartext after decryption.";
                 return false;
             }
 
-            Logging.Log(LoggingModule.Severity.Debug, "Decrypt decrypted " + req.Cipher.Length + " cipher bytes to " + req.Clear.Length + " clear bytes");
+            _Logging.Log(LoggingModule.Severity.Debug, "Decrypt decrypted " + req.Cipher.Length + " cipher bytes to " + req.Clear.Length + " clear bytes");
 
             req.Cipher = null;
             req.Passphrase = null;
@@ -140,7 +162,7 @@ namespace Kvpbase
              
             DateTime dt = DateTime.Now;
             sessionKey = dt.ToString("MMddyyyyhhmmssff");  // 16 bytes
-            byte[] ksnBytes = EncryptInternal(Encoding.UTF8.GetBytes(sessionKey), SystemConfig.Crypto.Passphrase);
+            byte[] ksnBytes = EncryptInternal(Encoding.UTF8.GetBytes(sessionKey), _Settings.Crypto.Passphrase);
             ksn = Convert.ToBase64String(ksnBytes);
             return true; 
         }
@@ -151,11 +173,11 @@ namespace Kvpbase
              
             if (String.IsNullOrEmpty(ksn))
             {
-                Logging.Log(LoggingModule.Severity.Warn, "GetSessionKey null ksn supplied");
+                _Logging.Log(LoggingModule.Severity.Warn, "GetSessionKey null ksn supplied");
                 return false;
             }
 
-            byte[] sessionKeyBytes = DecryptInternal(Convert.FromBase64String(ksn), SystemConfig.Crypto.Passphrase);
+            byte[] sessionKeyBytes = DecryptInternal(Convert.FromBase64String(ksn), _Settings.Crypto.Passphrase);
             sessionKey = Encoding.UTF8.GetString(sessionKeyBytes); 
 
             if (!String.IsNullOrEmpty(sessionKey))
@@ -166,14 +188,14 @@ namespace Kvpbase
                 }
                 else
                 {
-                    Logging.Log(LoggingModule.Severity.Warn, "GetSessionKey session key length was not 16, returning null (result: " + sessionKey + ")");
+                    _Logging.Log(LoggingModule.Severity.Warn, "GetSessionKey session key length was not 16, returning null (result: " + sessionKey + ")");
                     sessionKey = "";
                     return false;
                 }
             }
             else
             {
-                Logging.Log(LoggingModule.Severity.Warn, "GetSessionKey null session key after decryption operation");
+                _Logging.Log(LoggingModule.Severity.Warn, "GetSessionKey null session key after decryption operation");
                 return false;
             } 
         }
@@ -187,7 +209,7 @@ namespace Kvpbase
             // algorithm. Password creation can be done in several iterations.
             PasswordDeriveBytes password = new PasswordDeriveBytes(
                                                             passphrase,
-                                                            Encoding.UTF8.GetBytes(SystemConfig.Crypto.Salt),
+                                                            Encoding.UTF8.GetBytes(_Settings.Crypto.Salt),
                                                             "SHA1",
                                                             2);
 
@@ -207,7 +229,7 @@ namespace Kvpbase
             // bytes.
             ICryptoTransform encryptor = symmetricKey.CreateEncryptor(
                                                              keyBytes,
-                                                             Encoding.UTF8.GetBytes(SystemConfig.Crypto.InitVector));
+                                                             Encoding.UTF8.GetBytes(_Settings.Crypto.InitVector));
 
             // Define memory stream which will be used to hold encrypted data.
             MemoryStream memoryStream = new MemoryStream();
@@ -242,7 +264,7 @@ namespace Kvpbase
             // several iterations.
             PasswordDeriveBytes password = new PasswordDeriveBytes(
                                                             passphrase,
-                                                            Encoding.UTF8.GetBytes(SystemConfig.Crypto.Salt),
+                                                            Encoding.UTF8.GetBytes(_Settings.Crypto.Salt),
                                                             "SHA1",
                                                             2);
 
@@ -262,7 +284,7 @@ namespace Kvpbase
             // bytes.
             ICryptoTransform decryptor = symmetricKey.CreateDecryptor(
                                                              keyBytes,
-                                                             Encoding.UTF8.GetBytes(SystemConfig.Crypto.InitVector));
+                                                             Encoding.UTF8.GetBytes(_Settings.Crypto.InitVector));
 
             // Define memory stream which will be used to hold encrypted data.
             MemoryStream memoryStream = new MemoryStream(cipher);

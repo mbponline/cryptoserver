@@ -6,8 +6,11 @@ using System.Threading.Tasks;
 using SyslogLogging;
 using RestWrapper;
 
-namespace Kvpbase
+namespace Kvpbase.Classes
 {
+    /// <summary>
+    /// Console manager.
+    /// </summary>
     public class ConsoleManager
     {
         #region Public-Members
@@ -16,16 +19,23 @@ namespace Kvpbase
 
         #region Private-Members
 
-        private bool Enabled { get; set; }
-        private Settings CurrentSettings { get; set; }
-        private ConnectionManager Connections { get; set; }
-        private CryptoManager Crypto { get; set; }
-        private Func<bool> ExitApplicationDelegate;
+        private bool _Enabled { get; set; }
+        private Settings _Settings { get; set; }
+        private ConnectionManager _ConnMgr { get; set; }
+        private CryptoManager _CryptoMgr { get; set; }
+        private Func<bool> _ExitAppDelegate;
 
         #endregion
 
         #region Constructors-and-Factories
 
+        /// <summary>
+        /// Instantiate the object.
+        /// </summary>
+        /// <param name="settings">Server settings.</param>
+        /// <param name="conn">Connection manager.</param>
+        /// <param name="crypto">Crypto manager.</param>
+        /// <param name="exitApplication">Function to call when exiting the server.</param>
         public ConsoleManager(
             Settings settings,
             ConnectionManager conn, 
@@ -37,11 +47,11 @@ namespace Kvpbase
             if (crypto == null) throw new ArgumentNullException(nameof(crypto));
             if (exitApplication == null) throw new ArgumentNullException(nameof(exitApplication));
 
-            Enabled = true;
-            CurrentSettings = settings;
-            Connections = conn;
-            Crypto = crypto;
-            ExitApplicationDelegate = exitApplication;
+            _Enabled = true;
+            _Settings = settings;
+            _ConnMgr = conn;
+            _CryptoMgr = crypto;
+            _ExitAppDelegate = exitApplication;
 
             Task.Run(() => ConsoleWorker());
         }
@@ -50,9 +60,12 @@ namespace Kvpbase
 
         #region Public-Methods
 
+        /// <summary>
+        /// Stop the server.
+        /// </summary>
         public void Stop()
         {
-            Enabled = false;
+            _Enabled = false;
             return;
         }
 
@@ -63,7 +76,7 @@ namespace Kvpbase
         private void ConsoleWorker()
         {
             string userInput = "";
-            while (Enabled)
+            while (_Enabled)
             {
                 Console.Write("Command (? for help) > ");
                 userInput = Console.ReadLine();
@@ -83,8 +96,8 @@ namespace Kvpbase
 
                     case "q":
                     case "quit":
-                        Enabled = false;
-                        ExitApplicationDelegate();
+                        _Enabled = false;
+                        _ExitAppDelegate();
                         break;
                          
                     case "list_connections":
@@ -111,7 +124,7 @@ namespace Kvpbase
           
         private void ListConnections()
         {
-            List<Connection> conns = Connections.GetActiveConnections();
+            List<Connection> conns = _ConnMgr.GetActiveConnections();
             
             if (conns != null && conns.Count > 0)
             {

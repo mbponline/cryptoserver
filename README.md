@@ -54,11 +54,11 @@ foo
 ## Sample Configuration
 ```
 {
-  "EnableConsole": 1,
+  "EnableConsole": true,
   "Server": {
     "DnsHostname": "localhost",
     "Port": 9000,
-    "Ssl": 0
+    "Ssl": false
   },
   "Crypto": {
     "Passphrase": "6D8B18A82CAD7534",
@@ -70,18 +70,18 @@ foo
     "AdminApiKey": "admin",
     "CryptoApiKey": "user"
   },
-  "Syslog": {
+  "Logging": {
     "SyslogServerIp": "127.0.0.1",
     "SyslogServerPort": 514,
     "MinimumSeverityLevel": 0,
-    "LogRequests": 0,
-    "LogResponses": 0,
-    "ConsoleLogging": 1
+    "LogRequests": false,
+    "LogResponses": false,
+    "ConsoleLogging": true
   },
   "Rest": {
-    "UseWebProxy": 0,
+    "UseWebProxy": false,
     "WebProxyUrl": "",
-    "AcceptInvalidCerts": 1
+    "AcceptInvalidCerts": true
   }
 }
 

@@ -3,16 +3,34 @@ using System.Collections.Generic;
 using System.Threading;
 using System.Threading.Tasks;
 
-namespace Kvpbase
+namespace Kvpbase.Classes
 {
+    /// <summary>
+    /// Setup class for the cryptoserver.
+    /// </summary>
     public class Setup
     {
+        #region Public-Members
+
+        #endregion
+
+        #region Private-Members
+
+        #endregion
+
         #region Constructors-and-Factories
 
+        /// <summary>
+        /// Instantiate the setup process.
+        /// </summary>
         public Setup()
         {
             RunSetup();
         }
+
+        #endregion
+
+        #region Public-Methods
 
         #endregion
 
@@ -55,14 +73,14 @@ namespace Kvpbase
 
             #region Initial-Settings
             
-            ret.EnableConsole = 1; 
+            ret.EnableConsole = true; 
 
             #endregion
               
             #region Server
 
             ret.Server = new SettingsServer();
-            ret.Server.Ssl = 0;
+            ret.Server.Ssl = false;
             ret.Server.Port = Common.InputInteger("On which TCP port shall this node listen?", 9000, true, false);
             ret.Server.DnsHostname = Common.InputString("On which hostname shall this node listen?", "localhost", false);
 
@@ -143,21 +161,21 @@ namespace Kvpbase
 
             #region Syslog
 
-            ret.Syslog = new SettingsLogging();
-            ret.Syslog.ConsoleLogging = 1;
-            ret.Syslog.SyslogServerIp = "127.0.0.1";
-            ret.Syslog.SyslogServerPort = 514;
-            ret.Syslog.LogRequests = 0;
-            ret.Syslog.LogResponses = 0;
-            ret.Syslog.MinimumSeverityLevel = 1;
+            ret.Logging = new SettingsLogging();
+            ret.Logging.ConsoleLogging = true;
+            ret.Logging.SyslogServerIp = "127.0.0.1";
+            ret.Logging.SyslogServerPort = 514;
+            ret.Logging.LogRequests = false;
+            ret.Logging.LogResponses = false;
+            ret.Logging.MinimumSeverityLevel = 1;
 
             #endregion
             
             #region REST
 
             ret.Rest = new SettingsRest();
-            ret.Rest.AcceptInvalidCerts = 1;
-            ret.Rest.UseWebProxy = 0;
+            ret.Rest.AcceptInvalidCerts = true;
+            ret.Rest.UseWebProxy = false;
             ret.Rest.WebProxyUrl = "";
 
             #endregion
